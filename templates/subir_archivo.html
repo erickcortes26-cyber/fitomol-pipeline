@@ -1,59 +1,215 @@
 {% extends "layout/indexview.html" %}
+{% block 'title' %}Subir Archivo{% endblock 'title' %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
 
-{% block 'title' %}
-Subir archivo
-{% endblock 'title' %}
+    body {
+        background: radial-gradient(ellipse at top, #0d0020 0%, #000000 70%);
+        min-height: 100vh;
+        font-family: 'Rajdhani', sans-serif;
+    }
 
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/stardust.png');
+        opacity: 0.25;
+        pointer-events: none;
+        animation: drift 80s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes drift {
+        from { background-position: 0 0; }
+        to { background-position: 5000px 5000px; }
+    }
+
+    .page-wrapper {
+        position: relative;
+        z-index: 1;
+        padding: 3rem 1.5rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .galaxy-card {
+        background: rgba(15, 5, 35, 0.85);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(138, 43, 226, 0.2), inset 0 0 40px rgba(0, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        padding: 2.5rem;
+        animation: fadeIn 0.8s ease forwards;
+        opacity: 0;
+        margin-bottom: 2rem;
+    }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(20px); }
+    }
+
+    .galaxy-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.6rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+
+    .galaxy-subtitle {
+        color: rgba(200, 180, 255, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        font-weight: 300;
+    }
+
+    .galaxy-label {
+        color: rgba(0, 255, 255, 0.8);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .galaxy-input, .galaxy-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 10px;
+        color: #fff;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .galaxy-input:focus, .galaxy-select:focus {
+        border-color: #00ffff;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    .galaxy-select option {
+        background: #0d0020;
+        color: #fff;
+    }
+
+    .galaxy-btn {
+        width: 100%;
+        padding: 0.85rem;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        border: none;
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+    }
+
+    .galaxy-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+        background: linear-gradient(90deg, #8a2be2, #00ffff);
+    }
+
+    .section-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1rem;
+        color: rgba(0, 255, 255, 0.7);
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+    }
+
+    .historia-item {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(138, 43, 226, 0.25);
+        border-left: 3px solid #8a2be2;
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .historia-item:hover {
+        border-left-color: #00ffff;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+        transform: translateX(4px);
+    }
+
+    .historia-name {
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+
+    .historia-id {
+        color: rgba(0, 255, 255, 0.5);
+        font-size: 0.78rem;
+        font-family: monospace;
+        margin-top: 0.2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+</style>
+{% endblock 'styles' %}
 {% block 'content' %}
+<div class="page-wrapper">
 
-    <section class="bg-gray-50 flex justify-center">
+    <!-- Formulario subir archivo -->
+    <div class="galaxy-card">
+        <h1 class="galaxy-title">Subir Archivo</h1>
+        <p class="galaxy-subtitle">Carga tus datasets directamente a Galaxy</p>
 
-        <div class="bg-white shadow-lg rounded-lg p-8 w-full max-h-80 max-w-md space-y-6">
-            <form method="POST" enctype="multipart/form-data" class="space-y-4">
-                {% csrf_token %}
-                <div>
-                    <label for="archivo" class="block text-sm font-medium text-gray-700">Selecciona un archivo</label>
-                    <input type="file" name="archivo" id="archivo" required
-                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                <div>
-                    <label for="history_id" class="block text-sm font-medium text-gray-700">ID de la historia:</label>
-                    <select name="history_id" required class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm">
-                        <option value="">Selecciona una historia...</option>
-                        {% for historia in historias %}
-                            <option value="{{ historia.id }}">{{ historia.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <button type="submit" 
-                            class="mt-3 w-full bg-blue-400 text-white font-semibold py-2 px-4 rounded hover:bg-blue-500 transition">
-                        Subir a Galaxy
-                    </button>
-                </div>
-            </form>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="archivo" class="galaxy-label">Selecciona un archivo</label>
+                <input type="file" name="archivo" id="archivo" required class="galaxy-input">
+            </div>
+            <div class="form-group">
+                <label for="history_id" class="galaxy-label">Historia destino</label>
+                <select name="history_id" required class="galaxy-select">
+                    <option value="">Selecciona una historia...</option>
+                    {% for historia in historias %}
+                        <option value="{{ historia.id }}">{{ historia.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="galaxy-btn">
+                ✦ Subir a Galaxy
+            </button>
+        </form>
+    </div>
+
+    <!-- Lista de historias -->
+    <div class="galaxy-card">
+        <h2 class="section-title">✦ Historias disponibles</h2>
+        {% for history in historias %}
+        <div class="historia-item">
+            <div class="historia-name">{{ history.name }}</div>
+            <div class="historia-id">ID: {{ history.id }}</div>
         </div>
+        {% empty %}
+        <p style="color: rgba(200,180,255,0.4); font-size: 0.9rem;">No hay historias disponibles.</p>
+        {% endfor %}
+    </div>
 
-    
-    
-    </section>
-
-    <h2>Lista de Historias:</h2>
-
-    <section class="bg-gray-50 min-h-1/2">
-    
-
-        <ul class= "space-y-5 space-x-20">
-            {% for history in historias %}
-                <li class="p-5 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 bg-blue-50 text-blue-800">
-                    <label for="">{{history.name}}</label></br>
-                    <label for="">
-                        <strong>ID:</strong> {{ history.id }}
-                    </label>
-                </li>
-            {% endfor %}
-        </ul>
-    </section>
-
-
+</div>
 {% endblock 'content' %}

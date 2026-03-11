@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
@@ -13,12 +12,12 @@ urlpatterns = [
     path('show_dataset/<str:id>/', views.show_dataset, name='show_dataset'),
     path('get_jobs/<str:id>', views.get_jobs, name="get_jobs"),
     path('get_jobs_history/<str:id>', views.get_jobs_history, name="get_jobs_history"),
-    # path('probar_trimmomatic/', views.probar_trimmomatic, name='probar_trimmomatic'),
+    path('pipeline_progress_view/', views.pipeline_progress_view, name='pipeline_progress_view'),
+    path('pipeline_progress/', views.pipeline_progress, name='pipeline_progress'),
     path("user/", include('user_app.urls')),
-    path("ejecutar_augustus_view/", views.ejecutar_augustus_view, name="ejecutar_augustus_view"),
+    path("ejecutar_augustus_view/", views.ejecutar_augustus, name="ejecutar_augustus_view"),
 
-    
-    # URLS Para desarollo
+    # URLS Para desarrollo
     path("get_inputs_job/<path:id>/", views.get_inputs_job, name="get_inputs_job"),
     path("get_outputs_job/<path:id>/", views.get_outputs_job, name="get_outputs_job"),
     path("ejecutar_trimmomatic_single/<str:history_id>", views.ejecutar_trimmomatic_single, name="ejecutar_trimmomatic_single"),

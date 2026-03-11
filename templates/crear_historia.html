@@ -1,31 +1,149 @@
 {% extends "layout/indexview.html" %}
+{% block 'title' %}Crear Historia{% endblock 'title' %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
 
-{% block 'title' %}
-Crear historia
-{% endblock 'title' %}
+    body {
+        background: radial-gradient(ellipse at top, #0d0020 0%, #000000 70%);
+        min-height: 100vh;
+        font-family: 'Rajdhani', sans-serif;
+    }
 
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/stardust.png');
+        opacity: 0.25;
+        pointer-events: none;
+        animation: drift 80s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes drift {
+        from { background-position: 0 0; }
+        to { background-position: 5000px 5000px; }
+    }
+
+    .galaxy-card {
+        position: relative;
+        z-index: 1;
+        background: rgba(15, 5, 35, 0.85);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(138, 43, 226, 0.2), inset 0 0 40px rgba(0, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 480px;
+        animation: fadeIn 0.8s ease forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(20px); }
+    }
+
+    .galaxy-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.6rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+
+    .galaxy-subtitle {
+        color: rgba(200, 180, 255, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        font-weight: 300;
+    }
+
+    .galaxy-label {
+        color: rgba(0, 255, 255, 0.8);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .galaxy-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 10px;
+        color: #fff;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .galaxy-input:focus {
+        border-color: #00ffff;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    .galaxy-btn {
+        width: 100%;
+        padding: 0.85rem;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        border: none;
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+    }
+
+    .galaxy-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+        background: linear-gradient(90deg, #8a2be2, #00ffff);
+    }
+
+    .page-wrapper {
+        position: relative;
+        z-index: 1;
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+</style>
+{% endblock 'styles' %}
 {% block 'content' %}
+<div class="page-wrapper">
+    <div class="galaxy-card">
+        <h1 class="galaxy-title">Nueva Historia</h1>
+        <p class="galaxy-subtitle">Crea un nuevo espacio de trabajo en Galaxy</p>
 
-    <section class="bg-gray-50 min-h-screen flex justify-center">
-            
-        <div class="bg-white shadow-lg rounded-lg p-8 w-full max-h-50 max-w-md space-y-6">
-        
-            <form method="POST" class="space-y-4">
-                {% csrf_token %}
-
-                <div>
-                    <label for="nombre_historia" class="block text-sm font-medium text-gray-700">Nombre de historia</label>
-                    <input type="text" name="nombre_historia" id="nombre_historia" required 
-                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                <div>
-                    <button type="submit" 
-                            class="mt-3 w-full bg-blue-400 text-white font-semibold py-2 px-4 rounded hover:bg-blue-500 transition">
-                        Crear historia
-                    </button>
-                </div>
-            </form>
-        </div>
-    </section>
-
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="nombre_historia" class="galaxy-label">Nombre de la historia</label>
+                <input type="text" name="nombre_historia" id="nombre_historia" required
+                    placeholder="Ej. Análisis E. coli 2024"
+                    class="galaxy-input">
+            </div>
+            <button type="submit" class="galaxy-btn">
+                ✦ Crear Historia
+            </button>
+        </form>
+    </div>
+</div>
 {% endblock 'content' %}

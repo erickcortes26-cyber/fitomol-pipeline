@@ -1,34 +1,115 @@
-<h2>Resultados del Pipeline</h2>
+{% extends "layout/indexview.html" %}
+{% block 'title' %}Resultados del Pipeline{% endblock 'title' %}
+{% block 'content' %}
+<div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <h1 class="text-4xl font-bold text-gray-800">Resultados del Pipeline</h1>
+    <p class="text-gray-600"><strong>Historia ID:</strong> {{ history_id }}</p>
 
-<h3>Historia ID: {{ history_id }}</h3>
+    <!-- FastQC Inicial -->
+    {% if job_results.fastqc_inicial %}
+    <div class="p-5 rounded-2xl shadow-md bg-blue-50 border-l-4 border-blue-400">
+        <h3 class="text-xl font-bold text-blue-800">🔹 FastQC Inicial</h3>
+        <p><strong>Job ID (R1):</strong> {{ job_results.fastqc_inicial.fastqc_id1 }}</p>
+        <p><strong>Job ID (R2):</strong> {{ job_results.fastqc_inicial.fastqc_id2 }}</p>
+        <p><strong>Datasets R1:</strong></p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.fastqc_inicial.fastqc_outputs1 %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+        <p><strong>Datasets R2:</strong></p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.fastqc_inicial.fastqc_outputs2 %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
-<!-- FastQC -->
-<h3>🔹 FastQC</h3>
-<p><strong>Job ID:</strong> {{ job_results.fastqc.fastqc_id }}</p>
-<p><strong>Datasets generados:</strong></p>
-<ul>
-{% for dataset in job_results.fastqc.fastqc_outputs %}
-    <li>{{ dataset.name }} (ID: {{ dataset.id }}, Estado: {{ dataset.state }})</li>
-{% endfor %}
-</ul>
+    <!-- Bowtie2 -->
+    {% if job_results.bowtie %}
+    <div class="p-5 rounded-2xl shadow-md bg-green-50 border-l-4 border-green-400">
+        <h3 class="text-xl font-bold text-green-800">🔹 Bowtie2</h3>
+        <p><strong>Job ID:</strong> {{ job_results.bowtie.bowtie_id }}</p>
+        <p><strong>Datasets generados:</strong></p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.bowtie.bowtie_outputs %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
-<!-- Trimmomatic -->
-<h3>🔹 Trimmomatic</h3>
-<p><strong>Job ID:</strong> {{ job_results.trimmomatic.trimmomatic_id }}</p>
-<p><strong>Dataset principal ID:</strong> {{ job_results.trimmomatic.trimmomatic_output_id }}</p>
-<p><strong>Todos los datasets generados:</strong></p>
-<ul>
-{% for dataset in job_results.trimmomatic.trimmomatic_output %}
-    <li>{{ dataset.name }} (ID: {{ dataset.id }}, Estado: {{ dataset.state }})</li>
-{% endfor %}
-</ul>
+    <!-- Trimmomatic -->
+    {% if job_results.trimmomatic %}
+    <div class="p-5 rounded-2xl shadow-md bg-yellow-50 border-l-4 border-yellow-400">
+        <h3 class="text-xl font-bold text-yellow-800">🔹 Trimmomatic</h3>
+        <p><strong>Job ID:</strong> {{ job_results.trimmomatic.trimmomatic_id }}</p>
+        <p><strong>Datasets generados:</strong></p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.trimmomatic.trimmomatic_output %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
-<!-- Bowtie2 -->
-<h3>🔹 Bowtie2</h3>
-<p><strong>Job ID:</strong> {{ job_results.bowtie.bowtie_id }}</p>
-<p><strong>Datasets generados:</strong></p>
-<ul>
-{% for dataset in job_results.bowtie.bowtie_outputs %}
-    <li>{{ dataset.name }} (ID: {{ dataset.id }}, Estado: {{ dataset.state }})</li>
-{% endfor %}
-</ul>
+    <!-- FastQC Final -->
+    {% if job_results.fastqc_final %}
+    <div class="p-5 rounded-2xl shadow-md bg-blue-50 border-l-4 border-blue-400">
+        <h3 class="text-xl font-bold text-blue-800">🔹 FastQC Final</h3>
+        <p><strong>Job ID (R1):</strong> {{ job_results.fastqc_final.fastqc_id1 }}</p>
+        <p><strong>Job ID (R2):</strong> {{ job_results.fastqc_final.fastqc_id2 }}</p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.fastqc_final.fastqc_outputs1 %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- SPAdes -->
+    {% if job_results.spades %}
+    <div class="p-5 rounded-2xl shadow-md bg-purple-50 border-l-4 border-purple-400">
+        <h3 class="text-xl font-bold text-purple-800">🔹 Shovill (SPAdes)</h3>
+        <p><strong>Job ID:</strong> {{ job_results.spades.spades_id }}</p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.spades.spades_outputs %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Velvet -->
+    {% if job_results.velvet %}
+    <div class="p-5 rounded-2xl shadow-md bg-pink-50 border-l-4 border-pink-400">
+        <h3 class="text-xl font-bold text-pink-800">🔹 Shovill (Velvet)</h3>
+        <p><strong>Job ID:</strong> {{ job_results.velvet.velvet_id }}</p>
+        <ul class="list-disc ml-6">
+            {% for dataset in job_results.velvet.velvet_outputs %}
+                <li>ID: {{ dataset.id }} — Estado: {{ dataset.state }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- QUAST -->
+    {% if job_results.quast %}
+    <div class="p-5 rounded-2xl shadow-md bg-orange-50 border-l-4 border-orange-400">
+        <h3 class="text-xl font-bold text-orange-800">🔹 QUAST</h3>
+        <p><strong>SPAdes Job ID:</strong> {{ job_results.quast.reporteSpades.job_id }}</p>
+        <p><strong>Velvet Job ID:</strong> {{ job_results.quast.reporteVelvet.job_id }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Augustus -->
+    {% if job_results.augustus %}
+    <div class="p-5 rounded-2xl shadow-md bg-red-50 border-l-4 border-red-400">
+        <h3 class="text-xl font-bold text-red-800">🔹 Augustus</h3>
+        <p><strong>Job ID:</strong> {{ job_results.augustus.augustus_id }}</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock 'content' %}

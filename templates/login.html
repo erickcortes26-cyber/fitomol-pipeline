@@ -1,12 +1,143 @@
-<h2>Iniciar sesión</h2>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Galaxy Project</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at top, #1a002b, #000);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-{% if error %}
-<p style="color:red;">{{ error }}</p>
-{% endif %}
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.3;
+            animation: stars 60s linear infinite;
+        }
 
-<form method="POST">
-    {% csrf_token %}
-    <input type="text" name="username" placeholder="Usuario"><br>
-    <input type="password" name="password" placeholder="Contraseña"><br>
-    <button type="submit">Entrar</button>
-</form>
+        @keyframes stars {
+            from { background-position: 0 0; }
+            to { background-position: 10000px 10000px; }
+        }
+
+        .login-container {
+            position: relative;
+            background: rgba(30, 30, 60, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.6);
+            padding: 40px;
+            width: 320px;
+            z-index: 1;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #00ffff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 90%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            background: #1a1a3d;
+            color: #fff;
+            font-size: 1em;
+            transition: box-shadow 0.3s ease;
+        }
+
+        input:focus {
+            box-shadow: 0 0 10px #8a2be2;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00ffff, #8a2be2);
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        input[type="submit"]:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #8a2be2, #00ffff);
+        }
+
+        .messages {
+            color: #ff4d4d;
+            margin-bottom: 15px;
+        }
+
+        a {
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Galaxy Login</h1>
+
+        {% if error %}
+            <div class="messages">
+                <p>{{ error }}</p>
+            </div>
+        {% endif %}
+
+        <form method="POST" id="loginForm">
+            {% csrf_token %}
+            <input type="text" name="username" id="username" placeholder="Usuario" required>
+            <input type="password" name="password" id="password" placeholder="Contraseña" required>
+            <input type="submit" value="Iniciar Sesión">
+        </form>
+
+        <p><a href="{% url 'register' %}">¿No tienes cuenta? Regístrate aquí</a></p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector(".login-container").style.opacity = 0;
+            setTimeout(() => {
+                document.querySelector(".login-container").style.transition = "opacity 1.5s";
+                document.querySelector(".login-container").style.opacity = 1;
+            }, 100);
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", (e) => {
+            const user = document.getElementById("username").value.trim();
+            const pass = document.getElementById("password").value.trim();
+            if (user === "" || pass === "") {
+                e.preventDefault();
+                alert("Por favor completa ambos campos.");
+            }
+        });
+    </script>
+</body>
+</html>

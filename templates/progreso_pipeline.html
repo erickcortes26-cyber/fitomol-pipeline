@@ -1,0 +1,424 @@
+{% extends "layout/indexview.html" %}
+{% block 'title' %}Ejecutando Pipeline{% endblock 'title' %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+
+    body {
+        background: radial-gradient(ellipse at top, #0d0020 0%, #000000 70%);
+        min-height: 100vh;
+        font-family: 'Rajdhani', sans-serif;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/stardust.png');
+        opacity: 0.25;
+        pointer-events: none;
+        animation: drift 80s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes drift {
+        from { background-position: 0 0; }
+        to { background-position: 5000px 5000px; }
+    }
+
+    .page-wrapper {
+        position: relative;
+        z-index: 1;
+        padding: 3rem 1.5rem;
+        max-width: 750px;
+        margin: 0 auto;
+    }
+
+    .galaxy-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.4rem;
+    }
+
+    .galaxy-subtitle {
+        color: rgba(200, 180, 255, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 2.5rem;
+        font-weight: 300;
+    }
+
+    .progress-bar-wrapper {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(138, 43, 226, 0.3);
+        border-radius: 50px;
+        height: 10px;
+        margin-bottom: 2.5rem;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        border-radius: 50px;
+        transition: width 0.8s ease;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .step-card {
+        background: rgba(15, 5, 35, 0.7);
+        border: 1px solid rgba(138, 43, 226, 0.25);
+        border-left: 4px solid rgba(138, 43, 226, 0.3);
+        border-radius: 12px;
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.4s ease;
+    }
+
+    .step-card.running {
+        border-left-color: #00ffff;
+        background: rgba(0, 255, 255, 0.05);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+    }
+
+    .step-card.done {
+        border-left-color: #00ff64;
+        background: rgba(0, 255, 100, 0.05);
+    }
+
+    .step-card.error {
+        border-left-color: #ff5050;
+        background: rgba(255, 50, 50, 0.05);
+    }
+
+    .step-icon { font-size: 1.4rem; width: 2rem; text-align: center; flex-shrink: 0; }
+    .step-info { flex: 1; }
+
+    .step-name {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.8rem;
+        color: rgba(200, 180, 255, 0.9);
+        letter-spacing: 0.08em;
+    }
+
+    .step-desc { font-size: 0.82rem; color: rgba(200, 180, 255, 0.45); margin-top: 0.15rem; }
+
+    .step-status {
+        font-size: 0.78rem;
+        font-family: monospace;
+        padding: 0.25rem 0.7rem;
+        border-radius: 20px;
+        background: rgba(0,0,0,0.3);
+        color: rgba(200,180,255,0.4);
+        border: 1px solid rgba(138,43,226,0.2);
+        white-space: nowrap;
+        transition: all 0.4s ease;
+    }
+
+    .step-card.running .step-status { color: #00ffff; border-color: rgba(0,255,255,0.4); animation: pulse 1.5s ease-in-out infinite; }
+    .step-card.done .step-status { color: #00ff64; border-color: rgba(0,255,100,0.4); }
+    .step-card.error .step-status { color: #ff5050; border-color: rgba(255,50,50,0.4); }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .spinner {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid rgba(0,255,255,0.2);
+        border-top-color: #00ffff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+        margin-right: 5px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .final-msg {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        border-radius: 14px;
+        text-align: center;
+        font-family: 'Orbitron', monospace;
+        font-size: 1rem;
+        display: none;
+    }
+
+    .final-msg.success {
+        background: rgba(0,255,100,0.08);
+        border: 1px solid rgba(0,255,100,0.3);
+        color: #00ff64;
+    }
+
+    .final-msg.error {
+        background: rgba(255,50,50,0.08);
+        border: 1px solid rgba(255,50,50,0.3);
+        color: #ff5050;
+    }
+
+    .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+
+    .btn-galaxy {
+        display: inline-block;
+        padding: 0.7rem 1.5rem;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-galaxy:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(0,255,255,0.4); }
+
+    .btn-download {
+        display: inline-block;
+        padding: 0.7rem 1.5rem;
+        background: transparent;
+        border: 1px solid rgba(0,255,255,0.5);
+        border-radius: 10px;
+        color: #00ffff;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-download:hover { background: rgba(0,255,255,0.1); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+
+    .btn-reintentar {
+        display: inline-block;
+        padding: 0.7rem 1.5rem;
+        background: linear-gradient(90deg, #ff5050, #8a2be2);
+        border-radius: 10px;
+        color: #fff;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock 'styles' %}
+{% block 'content' %}
+<div class="page-wrapper">
+    <h1 class="galaxy-title">Pipeline en Ejecución</h1>
+    <p class="galaxy-subtitle">Historia: <strong style="color:rgba(0,255,255,0.7)">{{ nombre_historia }}</strong></p>
+
+    <div class="progress-bar-wrapper">
+        <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+
+    <div id="step-fastqc_inicial" class="step-card">
+        <div class="step-icon">🔬</div>
+        <div class="step-info">
+            <div class="step-name">FastQC Inicial</div>
+            <div class="step-desc">Control de calidad de reads originales R1 y R2</div>
+        </div>
+        <div class="step-status" id="status-fastqc_inicial">En espera</div>
+    </div>
+
+    <div id="step-bowtie" class="step-card">
+        <div class="step-icon">🧬</div>
+        <div class="step-info">
+            <div class="step-name">Bowtie2</div>
+            <div class="step-desc">Alineamiento al genoma de referencia</div>
+        </div>
+        <div class="step-status" id="status-bowtie">En espera</div>
+    </div>
+
+    <div id="step-trimmomatic" class="step-card">
+        <div class="step-icon">✂️</div>
+        <div class="step-info">
+            <div class="step-name">Trimmomatic</div>
+            <div class="step-desc">Limpieza y filtrado de reads no alineados</div>
+        </div>
+        <div class="step-status" id="status-trimmomatic">En espera</div>
+    </div>
+
+    <div id="step-fastqc_final" class="step-card">
+        <div class="step-icon">🔭</div>
+        <div class="step-info">
+            <div class="step-name">FastQC Final</div>
+            <div class="step-desc">Control de calidad post-limpieza</div>
+        </div>
+        <div class="step-status" id="status-fastqc_final">En espera</div>
+    </div>
+
+    <div id="step-spades" class="step-card">
+        <div class="step-icon">🧩</div>
+        <div class="step-info">
+            <div class="step-name">Shovill SPAdes</div>
+            <div class="step-desc">Ensamblado de genoma con SPAdes</div>
+        </div>
+        <div class="step-status" id="status-spades">En espera</div>
+    </div>
+
+    <div id="step-velvet" class="step-card">
+        <div class="step-icon">🧵</div>
+        <div class="step-info">
+            <div class="step-name">Shovill Velvet</div>
+            <div class="step-desc">Ensamblado de genoma con Velvet</div>
+        </div>
+        <div class="step-status" id="status-velvet">En espera</div>
+    </div>
+
+    <div id="step-quast" class="step-card">
+        <div class="step-icon">📊</div>
+        <div class="step-info">
+            <div class="step-name">QUAST</div>
+            <div class="step-desc">Evaluación de calidad y selección del mejor ensamblado</div>
+        </div>
+        <div class="step-status" id="status-quast">En espera</div>
+    </div>
+
+    <div id="step-augustus" class="step-card">
+        <div class="step-icon">🌌</div>
+        <div class="step-info">
+            <div class="step-name">Augustus</div>
+            <div class="step-desc">Predicción de genes sobre el mejor ensamblado</div>
+        </div>
+        <div class="step-status" id="status-augustus">En espera</div>
+    </div>
+
+    <!-- Mensaje final éxito -->
+    <div class="final-msg success" id="msgSuccess">
+        ✦ Pipeline completado exitosamente
+        <div class="btn-group">
+            <a id="btnGalaxy" href="#" target="_blank" class="btn-galaxy">Ver en Galaxy ✦</a>
+            <button onclick="descargarResumen()" class="btn-download">⬇ Descargar resumen</button>
+        </div>
+    </div>
+
+    <!-- Mensaje final error -->
+    <div class="final-msg error" id="msgError">
+        ✖ Error en el pipeline
+        <br><span id="errorDetalle" style="font-family:'Rajdhani',sans-serif; font-size:0.85rem; opacity:0.8;"></span>
+        <div class="btn-group">
+            <a href="{% url 'ejecutar_workflow' %}" class="btn-reintentar">Intentar de nuevo</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const PASOS = ['fastqc_inicial','bowtie','trimmomatic','fastqc_final','spades','velvet','quast','augustus'];
+const NOMBRES = {
+    fastqc_inicial: 'FastQC Inicial',
+    bowtie: 'Bowtie2',
+    trimmomatic: 'Trimmomatic',
+    fastqc_final: 'FastQC Final',
+    spades: 'Shovill SPAdes',
+    velvet: 'Shovill Velvet',
+    quast: 'QUAST',
+    augustus: 'Augustus'
+};
+const TOTAL = PASOS.length;
+
+const params = new URLSearchParams(window.location.search);
+const historyId = params.get('history_id') || '';
+const nombreHistoria = params.get('nombre_historia') || '';
+
+// Registro de tiempos por paso
+const tiempos = {};
+const resultados = [];
+
+function setStep(paso, estado) {
+    const card = document.getElementById('step-' + paso);
+    const status = document.getElementById('status-' + paso);
+    if (!card || !status) return;
+    card.classList.remove('running', 'done', 'error');
+
+    if (estado === 'running') {
+        tiempos[paso] = new Date();
+        card.classList.add('running');
+        status.innerHTML = '<span class="spinner"></span>Ejecutando...';
+    } else if (estado === 'done') {
+        card.classList.add('done');
+        status.textContent = '✓ Completado';
+        const dur = tiempos[paso] ? Math.round((new Date() - tiempos[paso]) / 1000) : '?';
+        resultados.push({ paso: NOMBRES[paso], estado: 'Completado ✓', duracion: dur + 's' });
+    } else if (estado === 'error') {
+        card.classList.add('error');
+        status.textContent = '✖ Error';
+        resultados.push({ paso: NOMBRES[paso], estado: 'Error ✖', duracion: '-' });
+    }
+}
+
+function setProgress(completados) {
+    const pct = Math.round((completados / TOTAL) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function descargarResumen() {
+    const fecha = new Date().toLocaleString('es-MX');
+    let texto = '=== RESUMEN DEL PIPELINE FITOMOL ===\n';
+    texto += `Fecha: ${fecha}\n`;
+    texto += `Historia: ${decodeURIComponent(nombreHistoria)}\n`;
+    texto += `History ID: ${historyId}\n`;
+    texto += `Galaxy URL: https://usegalaxy.org/histories/view?id=${historyId}\n\n`;
+    texto += '=== RESULTADOS POR PASO ===\n';
+    texto += `${'Paso'.padEnd(25)} ${'Estado'.padEnd(20)} ${'Duración'}\n`;
+    texto += '-'.repeat(55) + '\n';
+    for (const r of resultados) {
+        texto += `${r.paso.padEnd(25)} ${r.estado.padEnd(20)} ${r.duracion}\n`;
+    }
+    texto += '\n=== FIN DEL REPORTE ===\n';
+
+    const blob = new Blob([texto], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pipeline_resumen_${historyId.slice(0,8)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Conectar SSE
+const sseUrl = '/pipeline_progress/?' + params.toString();
+const evtSource = new EventSource(sseUrl);
+let completados = 0;
+
+evtSource.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    if (data.paso && data.estado) {
+        setStep(data.paso, data.estado);
+        if (data.estado === 'done') {
+            completados++;
+            setProgress(completados);
+        }
+        if (data.estado === 'error') {
+            evtSource.close();
+            document.getElementById('msgError').style.display = 'block';
+            document.getElementById('errorDetalle').textContent = data.detalle || '';
+        }
+    }
+
+    if (data.fin === true) {
+        evtSource.close();
+        setProgress(TOTAL);
+        // Actualizar link de Galaxy con el history_id real
+        document.getElementById('btnGalaxy').href = `https://usegalaxy.org/histories/view?id=${historyId}`;
+        document.getElementById('msgSuccess').style.display = 'block';
+        // Descarga automática del resumen
+        setTimeout(descargarResumen, 800);
+    }
+};
+
+evtSource.onerror = function() {
+    evtSource.close();
+};
+</script>
+{% endblock 'content' %}

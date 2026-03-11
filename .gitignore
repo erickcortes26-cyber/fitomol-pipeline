@@ -1,38 +1,6 @@
-# ---- Python ----
-__pycache__/
-*.py[cod]
-*.so
-*.egg
-*.egg-info/
-dist/
-build/
-
-# ---- Entorno virtual ----
-venv/
-ENV/
-env/
 .env
-.menv/
-.mvenv/
-
-# ---- Django ----
-*.log
-*.pot
+__pycache__/
 *.pyc
-db.sqlite3
-media/
-staticfiles/
-local_settings.py
-
-# Migraciones (excepto __init__.py)
-*/migrations/*
-!*/migrations/__init__.py
-
-# ---- IDEs / Editores ----
-.vscode/
-.idea/
-*.swp
-
-# ---- Sistema operativo ----
-.DS_Store
-Thumbs.db
+*.pyo
+venv/
+*.log
