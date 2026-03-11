@@ -14,6 +14,7 @@ urlpatterns = [
     path('get_jobs_history/<str:id>', views.get_jobs_history, name="get_jobs_history"),
     path('pipeline_progress_view/', views.pipeline_progress_view, name='pipeline_progress_view'),
     path('pipeline_progress/', views.pipeline_progress, name='pipeline_progress'),
+    path('cancelar_pipeline/', views.cancelar_pipeline, name='cancelar_pipeline'),
     path("user/", include('user_app.urls')),
     path("ejecutar_augustus_view/", views.ejecutar_augustus, name="ejecutar_augustus_view"),
 

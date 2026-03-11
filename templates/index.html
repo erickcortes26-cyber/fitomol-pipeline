@@ -1,18 +1,205 @@
-
 {% extends "layout/indexview.html" %}
 {% load static %}
-
-
 {% block 'title' %}Inicio{% endblock 'title' %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
 
+    body {
+        background: radial-gradient(ellipse at top, #0d0020 0%, #000000 70%);
+        min-height: 100vh;
+        font-family: 'Rajdhani', sans-serif;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/stardust.png');
+        opacity: 0.25;
+        pointer-events: none;
+        animation: drift 80s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 5000px 5000px; } }
+
+    .page-wrapper {
+        position: relative;
+        z-index: 1;
+        padding: 3rem 1.5rem;
+        max-width: 850px;
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+        animation: fadeIn 0.8s ease forwards;
+        opacity: 0;
+    }
+
+    .hero-sub {
+        color: rgba(200, 180, 255, 0.6);
+        font-size: 1.1rem;
+        margin-bottom: 3rem;
+        font-weight: 300;
+        animation: fadeIn 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.82rem;
+        color: rgba(0, 255, 255, 0.6);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+    }
+
+    .galaxy-card {
+        background: rgba(15, 5, 35, 0.85);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(138, 43, 226, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        animation: fadeIn 0.6s ease forwards;
+        opacity: 0;
+    }
+
+    .galaxy-card:nth-child(1) { animation-delay: 0.3s; }
+    .galaxy-card:nth-child(2) { animation-delay: 0.5s; }
+    .galaxy-card:nth-child(3) { animation-delay: 0.7s; }
+
+    .pipeline-steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .pipeline-step {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(138, 43, 226, 0.25);
+        border-radius: 10px;
+        padding: 0.8rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        transition: all 0.2s ease;
+    }
+
+    .pipeline-step:hover { border-color: rgba(0,255,255,0.4); transform: translateY(-2px); }
+    .pipeline-step .icon { font-size: 1.2rem; }
+    .pipeline-step .name { font-size: 0.85rem; color: rgba(200,180,255,0.8); font-weight: 600; }
+
+    .req-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .req-item {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+        border-left: 3px solid #8a2be2;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .req-item.reads { border-left-color: #00ffff; }
+    .req-item.genoma { border-left-color: #8a2be2; }
+
+    .req-title { font-family: 'Orbitron', monospace; font-size: 0.75rem; color: rgba(0,255,255,0.8); margin-bottom: 0.5rem; letter-spacing: 0.1em; }
+    .req-desc { font-size: 0.85rem; color: rgba(200,180,255,0.6); line-height: 1.5; }
+    .req-tag { display: inline-block; background: rgba(138,43,226,0.2); border: 1px solid rgba(138,43,226,0.4); border-radius: 5px; padding: 0.1rem 0.5rem; font-family: monospace; font-size: 0.8rem; color: #00ffff; margin-top: 0.4rem; }
+
+    .tip-list { list-style: none; padding: 0; margin: 0.8rem 0 0; }
+    .tip-list li { color: rgba(200,180,255,0.6); font-size: 0.88rem; padding: 0.3rem 0; padding-left: 1.2rem; position: relative; }
+    .tip-list li::before { content: "✦"; position: absolute; left: 0; color: rgba(0,255,255,0.5); font-size: 0.6rem; top: 0.45rem; }
+
+    .btn-empezar {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.85rem 2.5rem;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-empezar:hover { transform: scale(1.03); box-shadow: 0 0 25px rgba(0,255,255,0.4); }
+</style>
+{% endblock 'styles' %}
 {% block 'content' %}
-    <div class="max-w-4xl mx-auto px-4 py-8 space-y-2">
-        <h1 class="text-4xl font-bold text-gray-800 capitalize">
-        Bienvenido
-        </h1>
+<div class="page-wrapper">
+    <h1 class="hero-title">Fitomol Pipeline</h1>
+    <p class="hero-sub">Plataforma de análisis genómico automatizado sobre Galaxy</p>
 
-        <p class="text-gray-600 text-xl">
-        Plataforma para análisis genómico  
-        </p>
+    <!-- Pasos del pipeline -->
+    <div class="galaxy-card">
+        <p class="section-title">✦ Pasos del pipeline</p>
+        <div class="pipeline-steps">
+            <div class="pipeline-step"><span class="icon">🔬</span><span class="name">FastQC Inicial</span></div>
+            <div class="pipeline-step"><span class="icon">🧬</span><span class="name">Bowtie2</span></div>
+            <div class="pipeline-step"><span class="icon">✂️</span><span class="name">Trimmomatic</span></div>
+            <div class="pipeline-step"><span class="icon">🔭</span><span class="name">FastQC Final</span></div>
+            <div class="pipeline-step"><span class="icon">🧩</span><span class="name">Shovill SPAdes</span></div>
+            <div class="pipeline-step"><span class="icon">🧵</span><span class="name">Shovill Velvet</span></div>
+            <div class="pipeline-step"><span class="icon">📊</span><span class="name">QUAST</span></div>
+            <div class="pipeline-step"><span class="icon">🌌</span><span class="name">Augustus</span></div>
+        </div>
     </div>
+
+    <!-- Requisitos de archivos -->
+    <div class="galaxy-card">
+        <p class="section-title">✦ Archivos requeridos</p>
+        <div class="req-grid">
+            <div class="req-item reads">
+                <div class="req-title">Lecturas R1 y R2</div>
+                <div class="req-desc">Dos archivos de secuenciación paired-end. Deben estar en formato FASTQ.</div>
+                <span class="req-tag">.fastq</span>
+                <span class="req-tag">.fastq.gz</span>
+                <span class="req-tag">.fq</span>
+            </div>
+            <div class="req-item genoma">
+                <div class="req-title">Genoma de referencia</div>
+                <div class="req-desc">Archivo del genoma de la especie a analizar. Debe estar en formato FASTA. No se aceptan archivos .fna directamente, renómbralos a .fasta.</div>
+                <span class="req-tag">.fasta</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instrucciones de uso -->
+    <div class="galaxy-card">
+        <p class="section-title">✦ Cómo usar la plataforma</p>
+        <ul class="tip-list">
+            <li>Crea una historia en Galaxy desde la sección <strong style="color:rgba(0,255,255,0.7)">Crear Historia</strong>.</li>
+            <li>Sube tus archivos FASTQ (R1 y R2) y el genoma FASTA desde <strong style="color:rgba(0,255,255,0.7)">Subir Archivo</strong>.</li>
+            <li>Espera a que los archivos estén en estado <strong style="color:#00ff64">ok</strong> en Galaxy antes de ejecutar.</li>
+            <li>Ve a <strong style="color:rgba(0,255,255,0.7)">Ejecutar Workflow</strong>, selecciona tu historia y luego tus archivos.</li>
+            <li>El pipeline corre automáticamente. Puedes ver el progreso en tiempo real y cancelarlo si es necesario.</li>
+            <li>Al terminar, podrás ver los resultados directamente en Galaxy y descargar un resumen.</li>
+            <li>Si tu genoma está en formato .fna, renómbralo a .fasta antes de subirlo.</li>
+        </ul>
+        <a href="{% url 'ejecutar_workflow' %}" class="btn-empezar">✦ Comenzar análisis</a>
+    </div>
+</div>
 {% endblock 'content' %}

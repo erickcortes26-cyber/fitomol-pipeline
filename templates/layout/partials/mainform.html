@@ -1,6 +1,5 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Rajdhani:wght@300;400;500&display=swap');
-
     nav {
         position: relative;
         background: linear-gradient(90deg, #0a0015, #1a002b, #0a0015);
@@ -8,7 +7,6 @@
         box-shadow: 0 0 30px rgba(138, 43, 226, 0.2), 0 2px 20px rgba(0,0,0,0.5);
         overflow: hidden;
     }
-
     nav::before {
         content: "";
         position: absolute;
@@ -18,7 +16,6 @@
         opacity: 0.15;
         pointer-events: none;
     }
-
     nav::after {
         content: "";
         position: absolute;
@@ -27,13 +24,7 @@
         background: linear-gradient(90deg, transparent, #00ffff, #8a2be2, #00ffff, transparent);
         animation: scanline 3s linear infinite;
     }
-
-    @keyframes scanline {
-        0% { opacity: 0.3; }
-        50% { opacity: 1; }
-        100% { opacity: 0.3; }
-    }
-
+    @keyframes scanline { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
     nav ul {
         display: flex;
         align-items: center;
@@ -45,7 +36,6 @@
         position: relative;
         z-index: 1;
     }
-
     nav ul li a {
         font-family: 'Orbitron', monospace;
         font-size: 0.75rem;
@@ -59,7 +49,6 @@
         transition: all 0.3s ease;
         position: relative;
     }
-
     nav ul li a::before {
         content: "";
         position: absolute;
@@ -69,39 +58,62 @@
         transition: all 0.3s ease;
         transform: translateX(-50%);
     }
-
-    nav ul li a:hover {
-        color: #00ffff;
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-    }
-
-    nav ul li a:hover::before {
-        width: 100%;
-    }
-
+    nav ul li a:hover { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+    nav ul li a:hover::before { width: 100%; }
     .logout-btn {
         font-family: 'Orbitron', monospace !important;
         font-size: 0.7rem !important;
         font-weight: 700 !important;
         letter-spacing: 0.1em !important;
         color: #00ffff !important;
-        border: 1px solid rgba(0, 255, 255, 0.5) !important;
+        border: 1px solid rgba(0,255,255,0.5) !important;
         border-radius: 6px !important;
         padding: 0.5rem 1.2rem !important;
-        background: rgba(0, 255, 255, 0.05) !important;
+        background: rgba(0,255,255,0.05) !important;
         transition: all 0.3s ease !important;
-        text-shadow: 0 0 8px rgba(0, 255, 255, 0.4) !important;
+        text-shadow: 0 0 8px rgba(0,255,255,0.4) !important;
     }
+    .logout-btn:hover { background: rgba(0,255,255,0.15) !important; box-shadow: 0 0 15px rgba(0,255,255,0.3) !important; color: #fff !important; }
+    .logout-btn::before { display: none !important; }
 
-    .logout-btn:hover {
-        background: rgba(0, 255, 255, 0.15) !important;
-        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3) !important;
-        color: #fff !important;
+    #pipeline-banner {
+        display: none;
+        background: linear-gradient(90deg, rgba(0,255,255,0.06), rgba(138,43,226,0.06));
+        border-bottom: 1px solid rgba(0,255,255,0.2);
+        padding: 0.45rem 3rem;
+        text-align: center;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+        color: rgba(200,180,255,0.7);
+        animation: pulseBanner 2.5s ease-in-out infinite;
     }
-
-    .logout-btn::before {
-        display: none !important;
+    @keyframes pulseBanner {
+        0%,100% { background: linear-gradient(90deg, rgba(0,255,255,0.04), rgba(138,43,226,0.04)); }
+        50% { background: linear-gradient(90deg, rgba(0,255,255,0.1), rgba(138,43,226,0.1)); }
     }
+    #pipeline-banner a {
+        color: #00ffff;
+        text-decoration: none;
+        font-weight: 700;
+        margin-left: 1rem;
+        border: 1px solid rgba(0,255,255,0.4);
+        padding: 0.15rem 0.7rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    #pipeline-banner a:hover { background: rgba(0,255,255,0.12); box-shadow: 0 0 10px rgba(0,255,255,0.3); }
+    .banner-spinner {
+        display: inline-block;
+        width: 8px; height: 8px;
+        border: 1px solid rgba(0,255,255,0.3);
+        border-top-color: #00ffff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+        margin-right: 5px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
 <nav>
@@ -110,8 +122,30 @@
         <li><a href="{% url 'crear_historia' %}">Crear Historia</a></li>
         <li><a href="{% url 'subir_archivo' %}">Subir Archivo</a></li>
         <li><a href="{% url 'ejecutar_workflow' %}">Ejecutar Workflow</a></li>
-        <li>
-            <a href="{% url 'logout' %}" class="logout-btn">Cerrar Sesión</a>
-        </li>
+        <li><a href="{% url 'logout' %}" class="logout-btn">Cerrar Sesión</a></li>
     </ul>
 </nav>
+
+<div id="pipeline-banner">
+    <span class="banner-spinner"></span>
+    🔬 Pipeline en ejecución —
+    <a id="banner-link" href="#">Ver progreso →</a>
+</div>
+
+<script>
+(function() {
+    try {
+        const raw = localStorage.getItem('pipeline_activo');
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data.session_key) return;
+        const url = '/pipeline_progress_view/?session_key=' + data.session_key
+                  + '&history_id=' + data.history_id
+                  + '&nombre_historia=' + encodeURIComponent(data.nombre_historia);
+        document.getElementById('banner-link').href = url;
+        document.getElementById('pipeline-banner').style.display = 'block';
+    } catch(e) {
+        localStorage.removeItem('pipeline_activo');
+    }
+})();
+</script>

@@ -22,10 +22,7 @@
         z-index: 0;
     }
 
-    @keyframes drift {
-        from { background-position: 0 0; }
-        to { background-position: 5000px 5000px; }
-    }
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 5000px 5000px; } }
 
     .page-wrapper {
         position: relative;
@@ -33,6 +30,14 @@
         padding: 3rem 1.5rem;
         max-width: 750px;
         margin: 0 auto;
+    }
+
+    .header-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        gap: 1rem;
     }
 
     .galaxy-title {
@@ -48,9 +53,27 @@
     .galaxy-subtitle {
         color: rgba(200, 180, 255, 0.6);
         font-size: 0.95rem;
-        margin-bottom: 2.5rem;
         font-weight: 300;
     }
+
+    .btn-cancelar {
+        padding: 0.6rem 1.2rem;
+        background: transparent;
+        border: 1px solid rgba(255, 80, 80, 0.5);
+        border-radius: 10px;
+        color: #ff5050;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.7rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-top: 0.3rem;
+    }
+
+    .btn-cancelar:hover { background: rgba(255,50,50,0.1); box-shadow: 0 0 15px rgba(255,50,50,0.2); }
+    .btn-cancelar:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .progress-bar-wrapper {
         background: rgba(0,0,0,0.4);
@@ -83,33 +106,15 @@
         transition: all 0.4s ease;
     }
 
-    .step-card.running {
-        border-left-color: #00ffff;
-        background: rgba(0, 255, 255, 0.05);
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
-    }
-
-    .step-card.done {
-        border-left-color: #00ff64;
-        background: rgba(0, 255, 100, 0.05);
-    }
-
-    .step-card.error {
-        border-left-color: #ff5050;
-        background: rgba(255, 50, 50, 0.05);
-    }
+    .step-card.running { border-left-color: #00ffff; background: rgba(0,255,255,0.05); box-shadow: 0 0 20px rgba(0,255,255,0.1); }
+    .step-card.done { border-left-color: #00ff64; background: rgba(0,255,100,0.05); }
+    .step-card.error { border-left-color: #ff5050; background: rgba(255,50,50,0.05); }
+    .step-card.cancelled { border-left-color: #ff9900; background: rgba(255,153,0,0.05); }
 
     .step-icon { font-size: 1.4rem; width: 2rem; text-align: center; flex-shrink: 0; }
     .step-info { flex: 1; }
-
-    .step-name {
-        font-family: 'Orbitron', monospace;
-        font-size: 0.8rem;
-        color: rgba(200, 180, 255, 0.9);
-        letter-spacing: 0.08em;
-    }
-
-    .step-desc { font-size: 0.82rem; color: rgba(200, 180, 255, 0.45); margin-top: 0.15rem; }
+    .step-name { font-family: 'Orbitron', monospace; font-size: 0.8rem; color: rgba(200,180,255,0.9); letter-spacing: 0.08em; }
+    .step-desc { font-size: 0.82rem; color: rgba(200,180,255,0.45); margin-top: 0.15rem; }
 
     .step-status {
         font-size: 0.78rem;
@@ -126,6 +131,7 @@
     .step-card.running .step-status { color: #00ffff; border-color: rgba(0,255,255,0.4); animation: pulse 1.5s ease-in-out infinite; }
     .step-card.done .step-status { color: #00ff64; border-color: rgba(0,255,100,0.4); }
     .step-card.error .step-status { color: #ff5050; border-color: rgba(255,50,50,0.4); }
+    .step-card.cancelled .step-status { color: #ff9900; border-color: rgba(255,153,0,0.4); }
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
@@ -152,17 +158,9 @@
         display: none;
     }
 
-    .final-msg.success {
-        background: rgba(0,255,100,0.08);
-        border: 1px solid rgba(0,255,100,0.3);
-        color: #00ff64;
-    }
-
-    .final-msg.error {
-        background: rgba(255,50,50,0.08);
-        border: 1px solid rgba(255,50,50,0.3);
-        color: #ff5050;
-    }
+    .final-msg.success { background: rgba(0,255,100,0.08); border: 1px solid rgba(0,255,100,0.3); color: #00ff64; }
+    .final-msg.error { background: rgba(255,50,50,0.08); border: 1px solid rgba(255,50,50,0.3); color: #ff5050; }
+    .final-msg.cancelled { background: rgba(255,153,0,0.08); border: 1px solid rgba(255,153,0,0.3); color: #ff9900; }
 
     .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
 
@@ -191,7 +189,6 @@
         font-family: 'Orbitron', monospace;
         font-size: 0.75rem;
         font-weight: 700;
-        text-decoration: none;
         cursor: pointer;
         transition: all 0.3s ease;
     }
@@ -214,8 +211,14 @@
 {% endblock 'styles' %}
 {% block 'content' %}
 <div class="page-wrapper">
-    <h1 class="galaxy-title">Pipeline en Ejecución</h1>
-    <p class="galaxy-subtitle">Historia: <strong style="color:rgba(0,255,255,0.7)">{{ nombre_historia }}</strong></p>
+
+    <div class="header-row">
+        <div>
+            <h1 class="galaxy-title">Pipeline en Ejecución</h1>
+            <p class="galaxy-subtitle">Historia: <strong style="color:rgba(0,255,255,0.7)">{{ nombre_historia }}</strong></p>
+        </div>
+        <button class="btn-cancelar" id="btnCancelar" onclick="cancelarPipeline()">✖ Cancelar</button>
+    </div>
 
     <div class="progress-bar-wrapper">
         <div class="progress-bar-fill" id="progressBar"></div>
@@ -293,7 +296,7 @@
         <div class="step-status" id="status-augustus">En espera</div>
     </div>
 
-    <!-- Mensaje final éxito -->
+    <!-- Mensaje éxito -->
     <div class="final-msg success" id="msgSuccess">
         ✦ Pipeline completado exitosamente
         <div class="btn-group">
@@ -302,7 +305,7 @@
         </div>
     </div>
 
-    <!-- Mensaje final error -->
+    <!-- Mensaje error -->
     <div class="final-msg error" id="msgError">
         ✖ Error en el pipeline
         <br><span id="errorDetalle" style="font-family:'Rajdhani',sans-serif; font-size:0.85rem; opacity:0.8;"></span>
@@ -310,27 +313,30 @@
             <a href="{% url 'ejecutar_workflow' %}" class="btn-reintentar">Intentar de nuevo</a>
         </div>
     </div>
+
+    <!-- Mensaje cancelado -->
+    <div class="final-msg cancelled" id="msgCancelado">
+        ⊘ Pipeline cancelado
+        <div class="btn-group">
+            <a href="{% url 'ejecutar_workflow' %}" class="btn-reintentar" style="background: linear-gradient(90deg,#ff9900,#8a2be2);">Volver a seleccionar historia</a>
+        </div>
+    </div>
 </div>
 
 <script>
 const PASOS = ['fastqc_inicial','bowtie','trimmomatic','fastqc_final','spades','velvet','quast','augustus'];
 const NOMBRES = {
-    fastqc_inicial: 'FastQC Inicial',
-    bowtie: 'Bowtie2',
-    trimmomatic: 'Trimmomatic',
-    fastqc_final: 'FastQC Final',
-    spades: 'Shovill SPAdes',
-    velvet: 'Shovill Velvet',
-    quast: 'QUAST',
-    augustus: 'Augustus'
+    fastqc_inicial: 'FastQC Inicial', bowtie: 'Bowtie2', trimmomatic: 'Trimmomatic',
+    fastqc_final: 'FastQC Final', spades: 'Shovill SPAdes', velvet: 'Shovill Velvet',
+    quast: 'QUAST', augustus: 'Augustus'
 };
 const TOTAL = PASOS.length;
 
 const params = new URLSearchParams(window.location.search);
 const historyId = params.get('history_id') || '';
 const nombreHistoria = params.get('nombre_historia') || '';
+const sessionKey = params.get('session_key') || '';
 
-// Registro de tiempos por paso
 const tiempos = {};
 const resultados = [];
 
@@ -338,7 +344,7 @@ function setStep(paso, estado) {
     const card = document.getElementById('step-' + paso);
     const status = document.getElementById('status-' + paso);
     if (!card || !status) return;
-    card.classList.remove('running', 'done', 'error');
+    card.classList.remove('running', 'done', 'error', 'cancelled');
 
     if (estado === 'running') {
         tiempos[paso] = new Date();
@@ -353,12 +359,14 @@ function setStep(paso, estado) {
         card.classList.add('error');
         status.textContent = '✖ Error';
         resultados.push({ paso: NOMBRES[paso], estado: 'Error ✖', duracion: '-' });
+    } else if (estado === 'cancelled') {
+        card.classList.add('cancelled');
+        status.textContent = '⊘ Cancelado';
     }
 }
 
 function setProgress(completados) {
-    const pct = Math.round((completados / TOTAL) * 100);
-    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressBar').style.width = Math.round((completados / TOTAL) * 100) + '%';
 }
 
 function descargarResumen() {
@@ -375,7 +383,6 @@ function descargarResumen() {
         texto += `${r.paso.padEnd(25)} ${r.estado.padEnd(20)} ${r.duracion}\n`;
     }
     texto += '\n=== FIN DEL REPORTE ===\n';
-
     const blob = new Blob([texto], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -385,7 +392,40 @@ function descargarResumen() {
     URL.revokeObjectURL(url);
 }
 
-// Conectar SSE
+function cancelarPipeline() {
+    if (!confirm('¿Seguro que quieres cancelar el pipeline? Se detendrá el job activo en Galaxy.')) return;
+    document.getElementById('btnCancelar').disabled = true;
+    document.getElementById('btnCancelar').textContent = 'Cancelando...';
+
+    const formData = new FormData();
+    formData.append('session_key', sessionKey);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('/cancelar_pipeline/', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                evtSource.close();
+                // Marcar paso activo como cancelado
+                PASOS.forEach(p => {
+                    const card = document.getElementById('step-' + p);
+                    if (card && card.classList.contains('running')) setStep(p, 'cancelled');
+                });
+                document.getElementById('btnCancelar').style.display = 'none';
+                document.getElementById('msgCancelado').style.display = 'block';
+                localStorage.removeItem('pipeline_activo');
+            }
+        });
+}
+
+// Guardar pipeline activo en localStorage para el banner
+localStorage.setItem('pipeline_activo', JSON.stringify({
+    session_key: sessionKey,
+    history_id: historyId,
+    nombre_historia: decodeURIComponent(nombreHistoria)
+}));
+
+// SSE
 const sseUrl = '/pipeline_progress/?' + params.toString();
 const evtSource = new EventSource(sseUrl);
 let completados = 0;
@@ -393,15 +433,27 @@ let completados = 0;
 evtSource.onmessage = function(e) {
     const data = JSON.parse(e.data);
 
+    if (data.cancelado) {
+        evtSource.close();
+        // Marcar paso activo como cancelado
+        PASOS.forEach(p => {
+            const card = document.getElementById('step-' + p);
+            if (card && card.classList.contains('running')) setStep(p, 'cancelled');
+        });
+        document.getElementById('btnCancelar').style.display = 'none';
+        document.getElementById('msgCancelado').style.display = 'block';
+                localStorage.removeItem('pipeline_activo');
+        return;
+    }
+
     if (data.paso && data.estado) {
         setStep(data.paso, data.estado);
-        if (data.estado === 'done') {
-            completados++;
-            setProgress(completados);
-        }
+        if (data.estado === 'done') { completados++; setProgress(completados); }
         if (data.estado === 'error') {
             evtSource.close();
+            document.getElementById('btnCancelar').style.display = 'none';
             document.getElementById('msgError').style.display = 'block';
+            localStorage.removeItem('pipeline_activo');
             document.getElementById('errorDetalle').textContent = data.detalle || '';
         }
     }
@@ -409,16 +461,14 @@ evtSource.onmessage = function(e) {
     if (data.fin === true) {
         evtSource.close();
         setProgress(TOTAL);
-        // Actualizar link de Galaxy con el history_id real
+        document.getElementById('btnCancelar').style.display = 'none';
         document.getElementById('btnGalaxy').href = `https://usegalaxy.org/histories/view?id=${historyId}`;
         document.getElementById('msgSuccess').style.display = 'block';
-        // Descarga automática del resumen
+        localStorage.removeItem('pipeline_activo');
         setTimeout(descargarResumen, 800);
     }
 };
 
-evtSource.onerror = function() {
-    evtSource.close();
-};
+evtSource.onerror = function() { evtSource.close(); };
 </script>
 {% endblock 'content' %}

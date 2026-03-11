@@ -1,76 +1,198 @@
 {% extends "layout/indexview.html" %}
+{% block 'title' %}Seleccionar Datasets{% endblock 'title' %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
 
+    body {
+        background: radial-gradient(ellipse at top, #0d0020 0%, #000000 70%);
+        min-height: 100vh;
+        font-family: 'Rajdhani', sans-serif;
+    }
 
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/stardust.png');
+        opacity: 0.25;
+        pointer-events: none;
+        animation: drift 80s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 5000px 5000px; } }
+
+    .page-wrapper {
+        position: relative;
+        z-index: 1;
+        padding: 3rem 1.5rem;
+        max-width: 850px;
+        margin: 0 auto;
+    }
+
+    .galaxy-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.4rem;
+    }
+
+    .galaxy-subtitle {
+        color: rgba(200, 180, 255, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        font-weight: 300;
+    }
+
+    .galaxy-card {
+        background: rgba(15, 5, 35, 0.85);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(138, 43, 226, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        animation: fadeIn 0.6s ease forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    .galaxy-label {
+        color: rgba(0, 255, 255, 0.8);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .galaxy-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(138, 43, 226, 0.4);
+        border-radius: 10px;
+        color: #fff;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        margin-bottom: 1.2rem;
+    }
+
+    .galaxy-select:focus { border-color: #00ffff; box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+    .galaxy-select option { background: #0d0020; color: #fff; }
+
+    .galaxy-btn {
+        width: 100%;
+        padding: 0.85rem;
+        background: linear-gradient(90deg, #00ffff, #8a2be2);
+        border: none;
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+
+    .galaxy-btn:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(0,255,255,0.4); }
+
+    .section-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.82rem;
+        color: rgba(0, 255, 255, 0.6);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+    }
+
+    .dataset-item {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+        border-left: 3px solid rgba(138, 43, 226, 0.5);
+        border-radius: 10px;
+        padding: 0.8rem 1.1rem;
+        margin-bottom: 0.6rem;
+        transition: all 0.2s ease;
+    }
+
+    .dataset-item:hover { border-left-color: #00ffff; transform: translateX(3px); }
+
+    .dataset-name { color: #fff; font-size: 1rem; font-weight: 600; }
+    .dataset-meta { color: rgba(0,255,255,0.4); font-size: 0.75rem; font-family: monospace; margin-top: 0.2rem; }
+
+    .msg-success { background: rgba(0,255,100,0.1); border: 1px solid rgba(0,255,100,0.3); border-radius:10px; padding:0.75rem 1rem; color:#00ff64; margin-bottom:1rem; }
+    .msg-error { background: rgba(255,50,50,0.1); border: 1px solid rgba(255,50,50,0.3); border-radius:10px; padding:0.75rem 1rem; color:#ff5050; margin-bottom:1rem; }
+</style>
+{% endblock 'styles' %}
 {% block 'content' %}
+<div class="page-wrapper">
+    <h1 class="galaxy-title">Seleccionar Datasets</h1>
+    <p class="galaxy-subtitle">Historia: <strong style="color:rgba(0,255,255,0.7)">{{ nombre_historia }}</strong></p>
 
-    <div class="max-w-4xl mx-auto px-4 space-y-5">
+    {% if error %}<div class="msg-error">{{ error }}</div>{% endif %}
+    {% if mensaje %}<div class="msg-success">{{ mensaje }}</div>{% endif %}
 
-        
-        <h3 class="text-3xl font-bold">Ejecutar Workflow</h3>
-
-        <form id="workflowForm" method="post" class="space-y-4 mt-20">
+    <!-- Formulario selección -->
+    <div class="galaxy-card">
+        <p class="section-title">✦ Configurar pipeline</p>
+        <form id="workflowForm" method="post" action="{% url 'ejecutar_workflow' %}">
             {% csrf_token %}
             <input type="hidden" name="nombre_historia" value="{{ nombre_historia }}">
 
-            <label class="block font-semibold text-gray-700">Dataset 1 (FASTQ):</label>
-            <select name="id_dataset" required
-                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm">
-                <option value="">Selecciona un dataset...</option>
+            <label class="galaxy-label">Dataset R1 (FASTQ — lectura directa)</label>
+            <select name="id_dataset" required class="galaxy-select">
+                <option value="">Selecciona R1...</option>
                 {% for dataset in datasets_fastq %}
                     <option value="{{ dataset.id }}">{{ dataset.name }} — {{ dataset.state }}</option>
                 {% endfor %}
             </select>
 
-            <label class="block font-semibold text-gray-700">Dataset 2 (FASTQ):</label>
-            <select name="id_dataset2" required
-                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm">
-                <option value="">Selecciona un dataset...</option>
+            <label class="galaxy-label">Dataset R2 (FASTQ — lectura inversa)</label>
+            <select name="id_dataset2" required class="galaxy-select">
+                <option value="">Selecciona R2...</option>
                 {% for dataset in datasets_fastq %}
                     <option value="{{ dataset.id }}">{{ dataset.name }} — {{ dataset.state }}</option>
                 {% endfor %}
             </select>
 
-            <label class="block font-semibold text-gray-700">Genoma (FASTA):</label>
-            <select name="id_genoma" required
-                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm">
-                <option value="">Selecciona un genoma...</option>
+            <label class="galaxy-label">Genoma de referencia (FASTA)</label>
+            <select name="id_genoma" required class="galaxy-select">
+                <option value="">Selecciona genoma...</option>
                 {% for dataset in genomas %}
                     <option value="{{ dataset.id }}">{{ dataset.name }} — {{ dataset.state }}</option>
                 {% endfor %}
             </select>
-        <div class="my-3">
-                <button type="submit"
-                        class="px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-md">
-                    Ejecutar Proceso
-                </button>
-            </div>
 
+            <button type="submit" class="galaxy-btn">✦ Iniciar Pipeline</button>
         </form>
-    
-        <h1 class="text-xl font-bold text-gray-800 capitalize">Datasets de la historia "{{ nombre_historia }}"</h1>
-
-        {% if error %}
-            <p style="color:red">{{ error }}</p>
-        {% endif %}
-
-        {% if mensaje %}
-            <p style="color:green">{{ mensaje }}</p>
-        {% endif %}
-
-        {% if datasets %}
-            <h2 class="text-gray-600 text-xl">Lista de datasets:</h2>
-            <ul class="space-y-5">
-                {% for dataset in datasets %}
-                    <li class="p-5 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 bg-blue-50 text-blue-800">
-                        <p><strong>Nombre: </strong>{{ dataset.name }}</p>
-                        <p><strong>Estado: </strong>{{ dataset.state }}</p>
-                        <p><strong>ID: </strong>{{ dataset.id }}</p>
-                    </li>
-                {% endfor %}
-            </ul>
-
-        {% else %}
-            <p>No se encontraron datasets en esta historia.</p>
-        {% endif %}
     </div>
+
+    <!-- Lista de todos los datasets -->
+    <div class="galaxy-card" style="animation-delay:0.2s">
+        <p class="section-title">✦ Todos los datasets de la historia</p>
+        {% for dataset in datasets %}
+        <div class="dataset-item">
+            <div class="dataset-name">{{ dataset.name }}</div>
+            <div class="dataset-meta">Estado: {{ dataset.state }} &nbsp;|&nbsp; ID: {{ dataset.id }}</div>
+        </div>
+        {% empty %}
+        <p style="color:rgba(200,180,255,0.4); font-size:0.9rem;">No se encontraron datasets.</p>
+        {% endfor %}
+    </div>
+</div>
 {% endblock 'content' %}
