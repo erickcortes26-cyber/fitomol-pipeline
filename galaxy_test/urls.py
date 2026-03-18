@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
-from . import views
+from galaxy_test import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,10 +19,10 @@ urlpatterns = [
     path('cancelar_pipeline/', views.cancelar_pipeline, name='cancelar_pipeline'),
     path("user/", include('user_app.urls')),
     path("ejecutar_augustus_view/", views.ejecutar_augustus, name="ejecutar_augustus_view"),
-
-    # URLS Para desarrollo
     path("get_inputs_job/<path:id>/", views.get_inputs_job, name="get_inputs_job"),
     path("get_outputs_job/<path:id>/", views.get_outputs_job, name="get_outputs_job"),
     path("ejecutar_trimmomatic_single/<str:history_id>", views.ejecutar_trimmomatic_single, name="ejecutar_trimmomatic_single"),
-    path("ver_parametros_permitidos_tool/<path:id_tool>", views.ver_parametros_permitidos_tool, name="ver_parametros_permitidos_tool")
-]
+    path("ver_parametros_permitidos_tool/<path:id_tool>", views.ver_parametros_permitidos_tool, name="ver_parametros_permitidos_tool"),
+    path("historial/", views.historial_resultados, name="historial_resultados"),
+    path("ver_reportes/<int:resultado_id>/", views.ver_reportes, name="ver_reportes"),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

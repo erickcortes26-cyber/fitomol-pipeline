@@ -13,17 +13,11 @@ from django.shortcuts import render
 from decouple import config
 import requests
 from django.shortcuts import redirect
-from bs4 import BeautifulSoup
 from django.contrib.auth.decorators import login_required
 
 GALAXY_URL = settings.GALAXY_URL
 GALAXY_API_KEY = settings.GALAXY_API_KEY
 
-headers = {
-    "x-api-key": GALAXY_API_KEY
-}
-
-# Diccionario global para guardar el estado del pipeline por sesión
 _pipeline_state = {}
 
 def get_api_key(request):
@@ -39,12 +33,10 @@ def index(request):
 def obtener_historias(request):
     api_key = get_api_key(request)
     gi = GalaxyInstance(settings.GALAXY_URL, key=api_key)
-    historias = gi.histories.get_histories(keys=['id', 'name', 'count', 'update_time'])
-    return historias
+    return gi.histories.get_histories(keys=['id', 'name', 'count', 'update_time'])
 
 def listar_historias(request):
-    historias = obtener_historias(request)
-    return JsonResponse(historias, safe=False)
+    return JsonResponse(obtener_historias(request), safe=False)
 
 def crear_historia(request):
     if request.method == "POST":
@@ -74,13 +66,12 @@ def subir_archivo(request):
     historias = obtener_historias(request)
     return render(request, "subir_archivo.html", {'historias': historias})
 
-def esperar_finalizacion(gi, job_id, session_key, intervalo=10):
-    """Espera la finalización de un job, verificando también si fue cancelado."""
+def esperar_finalizacion(gi, job_id, session_key=None, intervalo=10):
     while True:
-        # Verificar si el pipeline fue cancelado
-        state = _pipeline_state.get(session_key, {})
-        if state.get("cancelado"):
-            raise Exception("Pipeline cancelado por el usuario")
+        if session_key:
+            state = _pipeline_state.get(session_key, {})
+            if state.get("cancelado"):
+                raise Exception("Pipeline cancelado por el usuario")
         job = gi.jobs.show_job(job_id)
         estado = job.get("state")
         if estado in ["ok", "error"]:
@@ -97,7 +88,7 @@ def obtener_datasets_con_estado(gi, outputs):
             resultado.append({"id": d["id"], "state": "desconocido"})
     return resultado
 
-def ejecutar_fastqc(history_id, datsets, api_key, session_key):
+def ejecutar_fastqc(history_id, datsets, api_key, session_key=None):
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
     results = {}
     for dataset in datsets:
@@ -108,16 +99,16 @@ def ejecutar_fastqc(history_id, datsets, api_key, session_key):
             tool_inputs=tool_inputs,
         )
         job_id = job["jobs"][0]["id"]
-        # Guardar job_id activo para poder cancelarlo
-        _pipeline_state[session_key]["job_activo"] = {"gi": gi, "job_id": job_id}
+        if session_key:
+            _pipeline_state[session_key]["job_activo"] = job_id
         esperar_finalizacion(gi, job_id, session_key)
         info = gi.jobs.show_job(job_id)
         outputs = info.get("outputs", {})
         output_datasets = obtener_datasets_con_estado(gi, outputs)
-        results[dataset] = {"job_id": job_id, "output_datasets": output_datasets}
+        results[dataset] = {"job_id": job_id, "output_datasets": output_datasets, "outputs_raw": outputs}
     return results
 
-def ejecutar_trimmomatic(history_id, unaligned_R1, unaligned_R2, api_key, session_key):
+def ejecutar_trimmomatic(history_id, unaligned_R1, unaligned_R2, api_key, session_key=None):
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
     tool_inputs = {
         "readtype|single_or_paired": "pair_of_files",
@@ -131,7 +122,8 @@ def ejecutar_trimmomatic(history_id, unaligned_R1, unaligned_R2, api_key, sessio
         tool_inputs=tool_inputs,
     )
     job_id = job["jobs"][0]["id"]
-    _pipeline_state[session_key]["job_activo"] = {"gi": gi, "job_id": job_id}
+    if session_key:
+        _pipeline_state[session_key]["job_activo"] = job_id
     esperar_finalizacion(gi, job_id, session_key)
     info = gi.jobs.show_job(job_id)
     outputs = info.get("outputs", {})
@@ -140,7 +132,7 @@ def ejecutar_trimmomatic(history_id, unaligned_R1, unaligned_R2, api_key, sessio
     paired_R2 = outputs.get("fastq_out_r2_paired", {}).get("id")
     return job_id, output_datasets, paired_R1, paired_R2
 
-def ejecutar_bowtie(history_id, datasetID_R1, datasetID_R2, genomaId, api_key, session_key):
+def ejecutar_bowtie(history_id, datasetID_R1, datasetID_R2, genomaId, api_key, session_key=None):
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
     tool_inputs = {
         "library|type": "paired",
@@ -158,7 +150,8 @@ def ejecutar_bowtie(history_id, datasetID_R1, datasetID_R2, genomaId, api_key, s
         tool_inputs=tool_inputs,
     )
     job_id = job["jobs"][0]["id"]
-    _pipeline_state[session_key]["job_activo"] = {"gi": gi, "job_id": job_id}
+    if session_key:
+        _pipeline_state[session_key]["job_activo"] = job_id
     esperar_finalizacion(gi, job_id, session_key)
     info = gi.jobs.show_job(job_id)
     outputs = info.get("outputs", {})
@@ -167,7 +160,7 @@ def ejecutar_bowtie(history_id, datasetID_R1, datasetID_R2, genomaId, api_key, s
     unaligned_R2 = outputs.get("output_unaligned_reads_l", {}).get("id")
     return job_id, output_datasets, unaligned_R1, unaligned_R2
 
-def ejecutar_shovill(history_id, paired_R1, paired_R2, type_assembler, api_key, session_key):
+def ejecutar_shovill(history_id, paired_R1, paired_R2, type_assembler, api_key, session_key=None):
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
     tool_inputs = {
         "library|lib_type": "paired",
@@ -181,7 +174,8 @@ def ejecutar_shovill(history_id, paired_R1, paired_R2, type_assembler, api_key, 
         tool_inputs=tool_inputs,
     )
     job_id = job["jobs"][0]["id"]
-    _pipeline_state[session_key]["job_activo"] = {"gi": gi, "job_id": job_id}
+    if session_key:
+        _pipeline_state[session_key]["job_activo"] = job_id
     esperar_finalizacion(gi, job_id, session_key)
     info = gi.jobs.show_job(job_id)
     outputs = info.get("outputs", {})
@@ -189,17 +183,19 @@ def ejecutar_shovill(history_id, paired_R1, paired_R2, type_assembler, api_key, 
     shovill = outputs.get("contigs", {}).get("id")
     return job_id, output_datasets, shovill
 
-def ejecutar_quast(history_id, contigs, api_key, session_key):
+def ejecutar_quast(history_id, contigs, api_key, session_key=None):
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
     results = {}
     datasets_calidad = {}
     winner = None
+    quast_html_ids = {}
+
     for contigId in contigs:
         tool_inputs = {
             "mode|mode": "individual",
             "mode|in|custom": "false",
             "mode|in|inputs": {"src": "hda", "id": contigId},
-            "output_files": ["tabular"]
+            "output_files": ["html", "tabular"]
         }
         job = gi.tools.run_tool(
             history_id=history_id,
@@ -207,7 +203,8 @@ def ejecutar_quast(history_id, contigs, api_key, session_key):
             tool_inputs=tool_inputs,
         )
         job_id = job["jobs"][0]["id"]
-        _pipeline_state[session_key]["job_activo"] = {"gi": gi, "job_id": job_id}
+        if session_key:
+            _pipeline_state[session_key]["job_activo"] = job_id
         esperar_finalizacion(gi, job_id, session_key)
         info = gi.jobs.show_job(job_id)
         outputs = info.get("outputs", {})
@@ -221,16 +218,22 @@ def ejecutar_quast(history_id, contigs, api_key, session_key):
         datasets_calidad[contigId] = {'N50': n50, 'L50': l50}
         os.remove(ruta)
         results[contigId] = {"job_id": job_id, "output_datasets": output_datasets}
-        if len(datasets_calidad) == 2:
-            if datasets_calidad[contigs[0]]['N50'] > datasets_calidad[contigs[1]]['N50'] and datasets_calidad[contigs[0]]['L50'] < datasets_calidad[contigs[1]]['L50']:
-                winner = contigs[0]
-            elif datasets_calidad[contigs[0]]['N50'] > datasets_calidad[contigs[1]]['N50']:
-                winner = contigs[0]
-            else:
-                winner = contigs[1]
-    return results, winner
+        # Guardar ID del HTML de QUAST
+        if 'report_html' in outputs:
+            quast_html_ids[contigId] = outputs['report_html']['id']
 
-def ejecutar_augustus(history_id, shovill, api_key, session_key):
+        if len(datasets_calidad) == 2:
+            c0, c1 = contigs[0], contigs[1]
+            if datasets_calidad[c0]['N50'] > datasets_calidad[c1]['N50'] and datasets_calidad[c0]['L50'] < datasets_calidad[c1]['L50']:
+                winner = c0
+            elif datasets_calidad[c0]['N50'] > datasets_calidad[c1]['N50']:
+                winner = c0
+            else:
+                winner = c1
+
+    return results, winner, datasets_calidad, quast_html_ids
+
+def ejecutar_augustus(history_id, shovill, api_key, session_key=None):
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
     tool_inputs = {"input_genome": {"src": "hda", "id": shovill}}
     job = gi.tools.run_tool(
@@ -239,11 +242,40 @@ def ejecutar_augustus(history_id, shovill, api_key, session_key):
         tool_inputs=tool_inputs,
     )
     job_id = job["jobs"][0]["id"]
-    _pipeline_state[session_key]["job_activo"] = {"gi": gi, "job_id": job_id}
+    if session_key:
+        _pipeline_state[session_key]["job_activo"] = job_id
     esperar_finalizacion(gi, job_id, session_key)
     info = gi.datasets.show_dataset(job_id)
     outputs = info.get("outputs", {})
     return job_id, outputs
+
+def _descargar_reporte_fastqc(gi, job_result, nombre_archivo):
+    """Descarga el HTML de FastQC y lo guarda en media/reportes/fastqc/"""
+    try:
+        outputs_raw = job_result.get("outputs_raw", {})
+        html_id = outputs_raw.get("html_file", {}).get("id")
+        if not html_id:
+            return None
+        carpeta = os.path.join(settings.MEDIA_ROOT, 'reportes', 'fastqc')
+        os.makedirs(carpeta, exist_ok=True)
+        ruta = os.path.join(carpeta, nombre_archivo)
+        gi.datasets.download_dataset(html_id, file_path=ruta, use_default_filename=False)
+        return f'reportes/fastqc/{nombre_archivo}'
+    except Exception:
+        return None
+
+def _descargar_reporte_quast(gi, html_id, nombre_archivo):
+    """Descarga el HTML de QUAST y lo guarda en media/reportes/quast/"""
+    try:
+        if not html_id:
+            return None
+        carpeta = os.path.join(settings.MEDIA_ROOT, 'reportes', 'quast')
+        os.makedirs(carpeta, exist_ok=True)
+        ruta = os.path.join(carpeta, nombre_archivo)
+        gi.datasets.download_dataset(html_id, file_path=ruta, use_default_filename=False)
+        return f'reportes/quast/{nombre_archivo}'
+    except Exception:
+        return None
 
 def ejecutar_workflow(request):
     api_key = get_api_key(request)
@@ -296,15 +328,12 @@ def ejecutar_workflow(request):
 
         session_key = f"{request.user.id}_{history_id}"
         _pipeline_state[session_key] = {
-            "eventos": [],
-            "terminado": False,
-            "cancelado": False,
-            "job_activo": None
+            "eventos": [], "terminado": False, "cancelado": False, "job_activo": None
         }
 
         t = threading.Thread(
             target=_run_pipeline,
-            args=(session_key, history_id, datasetID, datasetID2, genomaId, api_key),
+            args=(session_key, history_id, datasetID, datasetID2, genomaId, api_key, request.user.username, nameHistory),
             daemon=True
         )
         t.start()
@@ -317,34 +346,6 @@ def ejecutar_workflow(request):
         )
 
     return render(request, "ejecutar_herramienta/ejecutar_workflow.html", {"histories": histories})
-
-
-def cancelar_pipeline(request):
-    """Cancela el pipeline activo y el job en Galaxy."""
-    if request.method == "POST":
-        session_key = request.POST.get('session_key', '')
-        state = _pipeline_state.get(session_key)
-        if not state:
-            return JsonResponse({"ok": False, "msg": "Pipeline no encontrado"})
-
-        # Marcar como cancelado para que el hilo pare
-        state["cancelado"] = True
-
-        # Intentar cancelar el job activo en Galaxy
-        job_activo = state.get("job_activo")
-        if job_activo:
-            try:
-                gi = job_activo["gi"]
-                job_id = job_activo["job_id"]
-                gi.jobs.cancel_job(job_id)
-            except Exception as e:
-                pass  # Si falla el cancel en Galaxy, igual paramos localmente
-
-        state["terminado"] = True
-        state["eventos"].append({"cancelado": True})
-
-        return JsonResponse({"ok": True, "msg": "Pipeline cancelado"})
-    return JsonResponse({"ok": False, "msg": "Método no permitido"})
 
 
 def pipeline_progress_view(request):
@@ -379,55 +380,150 @@ def pipeline_progress(request):
     return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 
-def _run_pipeline(session_key, history_id, datasetID, datasetID2, genomaId, api_key):
-    def push(paso, estado, detalle=""):
-        _pipeline_state[session_key]["eventos"].append({"paso": paso, "estado": estado, "detalle": detalle})
+def cancelar_pipeline(request):
+    if request.method == "POST":
+        session_key = request.POST.get("session_key", "")
+        state = _pipeline_state.get(session_key)
+        if state:
+            state["cancelado"] = True
+            job_id = state.get("job_activo")
+            if job_id:
+                try:
+                    api_key = get_api_key(request)
+                    gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
+                    gi.jobs.cancel_job(job_id)
+                except Exception:
+                    pass
+        return JsonResponse({"ok": True})
+    return JsonResponse({"ok": False})
 
-    def push_fin():
-        _pipeline_state[session_key]["eventos"].append({"fin": True})
+
+def _run_pipeline(session_key, history_id, datasetID, datasetID2, genomaId, api_key, usuario, nombre_historia):
+    gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
+    tiempos = {}
+
+    def push(paso, estado, detalle=""):
+        _pipeline_state[session_key]["eventos"].append({
+            "paso": paso, "estado": estado, "detalle": detalle
+        })
+
+    def push_fin(resultado_id=None):
+        ev = {"fin": True}
+        if resultado_id:
+            ev["resultado_id"] = resultado_id
+        _pipeline_state[session_key]["eventos"].append(ev)
         _pipeline_state[session_key]["terminado"] = True
 
     def push_error(paso, msg):
-        _pipeline_state[session_key]["eventos"].append({"paso": paso, "estado": "error", "detalle": msg})
+        _pipeline_state[session_key]["eventos"].append({
+            "paso": paso, "estado": "error", "detalle": msg
+        })
         _pipeline_state[session_key]["terminado"] = True
 
     try:
+        t0 = time.time()
+
         push("fastqc_inicial", "running")
-        ejecutar_fastqc(history_id, [datasetID, datasetID2], api_key, session_key)
+        t = time.time()
+        fastqc_inicial = ejecutar_fastqc(history_id, [datasetID, datasetID2], api_key, session_key)
+        tiempos["FastQC Inicial"] = int(time.time() - t)
         push("fastqc_inicial", "done")
 
         push("bowtie", "running")
+        t = time.time()
         _, _, unaligned_R1, unaligned_R2 = ejecutar_bowtie(history_id, datasetID, datasetID2, genomaId, api_key, session_key)
+        tiempos["Bowtie2"] = int(time.time() - t)
         push("bowtie", "done")
 
         push("trimmomatic", "running")
+        t = time.time()
         _, _, paired_R1, paired_R2 = ejecutar_trimmomatic(history_id, unaligned_R1, unaligned_R2, api_key, session_key)
+        tiempos["Trimmomatic"] = int(time.time() - t)
         push("trimmomatic", "done")
 
         push("fastqc_final", "running")
-        ejecutar_fastqc(history_id, [paired_R1, paired_R2], api_key, session_key)
+        t = time.time()
+        fastqc_final = ejecutar_fastqc(history_id, [paired_R1, paired_R2], api_key, session_key)
+        tiempos["FastQC Final"] = int(time.time() - t)
         push("fastqc_final", "done")
 
         push("spades", "running")
+        t = time.time()
         _, _, spades_contigs = ejecutar_shovill(history_id, paired_R1, paired_R2, "spades", api_key, session_key)
+        tiempos["SPAdes"] = int(time.time() - t)
         push("spades", "done")
 
         push("velvet", "running")
+        t = time.time()
         _, _, velvet_contigs = ejecutar_shovill(history_id, paired_R1, paired_R2, "velvet", api_key, session_key)
+        tiempos["Velvet"] = int(time.time() - t)
         push("velvet", "done")
 
         push("quast", "running")
-        _, winner = ejecutar_quast(history_id, [spades_contigs, velvet_contigs], api_key, session_key)
+        t = time.time()
+        quast_results, winner, datasets_calidad, quast_html_ids = ejecutar_quast(
+            history_id, [spades_contigs, velvet_contigs], api_key, session_key
+        )
+        tiempos["QUAST"] = int(time.time() - t)
         push("quast", "done")
 
         push("augustus", "running")
+        t = time.time()
         ejecutar_augustus(history_id, winner, api_key, session_key)
+        tiempos["Augustus"] = int(time.time() - t)
         push("augustus", "done")
 
-        push_fin()
+        duracion_total = int(time.time() - t0)
+
+        # --- Descargar reportes ---
+        datasets_list = list(fastqc_inicial.keys())
+        r_fastqc_r1_i = _descargar_reporte_fastqc(gi, fastqc_inicial.get(datasets_list[0], {}), f"fastqc_inicial_r1_{history_id}.html") if len(datasets_list) > 0 else None
+        r_fastqc_r2_i = _descargar_reporte_fastqc(gi, fastqc_inicial.get(datasets_list[1], {}), f"fastqc_inicial_r2_{history_id}.html") if len(datasets_list) > 1 else None
+        datasets_final = list(fastqc_final.keys())
+        r_fastqc_r1_f = _descargar_reporte_fastqc(gi, fastqc_final.get(datasets_final[0], {}), f"fastqc_final_r1_{history_id}.html") if len(datasets_final) > 0 else None
+        r_fastqc_r2_f = _descargar_reporte_fastqc(gi, fastqc_final.get(datasets_final[1], {}), f"fastqc_final_r2_{history_id}.html") if len(datasets_final) > 1 else None
+        r_quast_spades = _descargar_reporte_quast(gi, quast_html_ids.get(spades_contigs), f"quast_spades_{history_id}.html")
+        r_quast_velvet = _descargar_reporte_quast(gi, quast_html_ids.get(velvet_contigs), f"quast_velvet_{history_id}.html")
+
+        # --- Guardar en PostgreSQL ---
+        ganador_nombre = 'spades' if winner == spades_contigs else 'velvet'
+        n50_sp = datasets_calidad.get(spades_contigs, {}).get('N50')
+        l50_sp = datasets_calidad.get(spades_contigs, {}).get('L50')
+        n50_vl = datasets_calidad.get(velvet_contigs, {}).get('N50')
+        l50_vl = datasets_calidad.get(velvet_contigs, {}).get('L50')
+
+        try:
+            from resultados_app.models import ResultadoPipeline
+            resultado = ResultadoPipeline(
+                usuario=usuario,
+                nombre_historia=nombre_historia,
+                history_id=history_id,
+                ganador=ganador_nombre,
+                n50_spades=n50_sp,
+                l50_spades=l50_sp,
+                n50_velvet=n50_vl,
+                l50_velvet=l50_vl,
+                duracion_total=duracion_total,
+            )
+            if r_fastqc_r1_i: resultado.reporte_fastqc_r1_inicial = r_fastqc_r1_i
+            if r_fastqc_r2_i: resultado.reporte_fastqc_r2_inicial = r_fastqc_r2_i
+            if r_fastqc_r1_f: resultado.reporte_fastqc_r1_final = r_fastqc_r1_f
+            if r_fastqc_r2_f: resultado.reporte_fastqc_r2_final = r_fastqc_r2_f
+            if r_quast_spades: resultado.reporte_quast_spades = r_quast_spades
+            if r_quast_velvet: resultado.reporte_quast_velvet = r_quast_velvet
+            resultado.save(using='resultados')
+            resultado_id = resultado.id
+        except Exception as e:
+            resultado_id = None
+
+        push_fin(resultado_id=resultado_id)
 
     except Exception as e:
         msg = str(e)
+        if "cancelado" in msg.lower():
+            _pipeline_state[session_key]["eventos"].append({"cancelado": True})
+            _pipeline_state[session_key]["terminado"] = True
+            return
         eventos = _pipeline_state[session_key]["eventos"]
         paso_activo = None
         for ev in reversed(eventos):
@@ -437,6 +533,20 @@ def _run_pipeline(session_key, history_id, datasetID, datasetID2, genomaId, api_
         push_error(paso_activo or "fastqc_inicial", msg)
 
 
+# ── Vista historial de resultados ───────────────────────────────────────────
+def historial_resultados(request):
+    from resultados_app.models import ResultadoPipeline
+    resultados = ResultadoPipeline.objects.using('resultados').filter(usuario=request.user.username)
+    return render(request, "historial_resultados.html", {"resultados": resultados})
+
+
+def ver_reportes(request, resultado_id):
+    from resultados_app.models import ResultadoPipeline
+    resultado = ResultadoPipeline.objects.using('resultados').get(id=resultado_id)
+    return render(request, "ver_reportes.html", {"resultado": resultado})
+
+
+# ── Funciones auxiliares existentes ─────────────────────────────────────────
 def ejecutar_trimmomatic_single(request, history_id):
     api_key = get_api_key(request)
     gi = GalaxyInstance(url=GALAXY_URL, key=api_key)
@@ -447,25 +557,17 @@ def ejecutar_trimmomatic_single(request, history_id):
     datasets_raw = gi.histories.show_history(history_id, contents=True)
     datasets = [d for d in datasets_raw if (not d.get("deleted", False)) and d.get("visible", True)]
     datasets_fastq = [d for d in datasets if d["name"].lower().endswith((".fastq", ".fq", ".fastq.gz"))]
-
     if not (idDataset and idDataset2):
         return render(request, "ejecutar_herramienta/ejecutar_trimmomatic_single.html", {
-            "datasets": datasets,
-            "datasets_fastq": datasets_fastq,
-            "history_id": history_id,
-            "nombre_historia": nameHistory
+            "datasets": datasets, "datasets_fastq": datasets_fastq,
+            "history_id": history_id, "nombre_historia": nameHistory
         })
-
     datasetID = datasetID2 = None
     for dataset in datasets:
-        if dataset['id'] == idDataset:
-            datasetID = idDataset
-        elif dataset['id'] == idDataset2:
-            datasetID2 = idDataset2
-
+        if dataset['id'] == idDataset: datasetID = idDataset
+        elif dataset['id'] == idDataset2: datasetID2 = idDataset2
     if not (datasetID and datasetID2):
         return render(request, "error.html", {"mensaje": "Dataset no encontrado."})
-
     tool_inputs = {
         "readtype|single_or_paired": "pair_of_files",
         "readtype|fastq_r1_in": {"src": "hda", "id": idDataset},
@@ -478,14 +580,9 @@ def ejecutar_trimmomatic_single(request, history_id):
         tool_inputs=tool_inputs,
     )
     job_id = job["jobs"][0]["id"]
-    esperar_finalizacion(gi, job_id, "single")
+    esperar_finalizacion(gi, job_id)
     info = gi.jobs.show_job(job_id)
     return JsonResponse({"info": info}, safe=False)
-
-
-def ejecutar_bowtie2_single(request, history_id):
-    return JsonResponse({"mensaje": "bowtie2_single no implementado aún"})
-
 
 def show_dataset(request, id):
     api_key = get_api_key(request)

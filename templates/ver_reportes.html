@@ -1,0 +1,112 @@
+{% extends "layout/indexview.html" %}
+{% block 'title' %}Reportes — {{ resultado.nombre_historia }}{% endblock %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap');
+    body { background:#000; min-height:100vh; font-family:'Rajdhani',sans-serif; }
+    body::before { content:""; position:fixed; top:0;left:0;width:100%;height:100%; background:url('https://www.transparenttextures.com/patterns/stardust.png'); opacity:0.15; pointer-events:none; z-index:0; }
+    .page-wrapper { position:relative; z-index:1; padding:2rem 1.5rem; max-width:1100px; margin:0 auto; }
+    .galaxy-title { font-family:'Orbitron',monospace; font-size:1.5rem; font-weight:700; background:linear-gradient(90deg,#00ffff,#8a2be2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.3rem; }
+    .galaxy-sub { color:rgba(200,180,255,0.5); font-size:0.85rem; margin-bottom:2rem; }
+    .tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .tab-btn { font-family:'Orbitron',monospace; font-size:0.65rem; padding:0.5rem 1rem; background:rgba(0,0,0,0.4); border:1px solid rgba(138,43,226,0.3); border-radius:6px; color:rgba(200,180,255,0.7); cursor:pointer; transition:all 0.2s ease; letter-spacing:0.08em; }
+    .tab-btn:hover, .tab-btn.active { background:rgba(138,43,226,0.2); border-color:rgba(0,255,255,0.5); color:#00ffff; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .report-frame { width:100%; height:80vh; border:1px solid rgba(138,43,226,0.3); border-radius:12px; background:#fff; }
+    .no-reporte { text-align:center; padding:4rem; color:rgba(200,180,255,0.4); font-size:0.9rem; border:1px dashed rgba(138,43,226,0.3); border-radius:12px; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:0.8rem; margin-bottom:1.5rem; }
+    .metric-card { background:rgba(15,5,35,0.8); border:1px solid rgba(138,43,226,0.3); border-radius:10px; padding:1rem; text-align:center; }
+    .metric-label { color:rgba(0,255,255,0.5); font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; }
+    .metric-value { color:#fff; font-size:1.4rem; font-weight:700; margin-top:0.3rem; font-family:'Orbitron',monospace; }
+    .ganador-badge { display:inline-block; padding:0.3rem 1rem; border-radius:20px; font-size:0.8rem; font-family:'Orbitron',monospace; font-weight:700; margin-top:0.5rem; }
+    .ganador-spades { background:rgba(0,255,255,0.15); border:1px solid rgba(0,255,255,0.4); color:#00ffff; }
+    .ganador-velvet { background:rgba(138,43,226,0.15); border:1px solid rgba(138,43,226,0.4); color:#b060ff; }
+</style>
+{% endblock %}
+{% block 'content' %}
+<div class="page-wrapper">
+    <h1 class="galaxy-title">{{ resultado.nombre_historia }}</h1>
+    <p class="galaxy-sub">Pipeline ejecutado el {{ resultado.fecha|date:"d/m/Y H:i" }} por {{ resultado.usuario }}</p>
+
+    <!-- Métricas resumen -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">N50 SPAdes</div>
+            <div class="metric-value">{{ resultado.n50_spades|default:"—" }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">L50 SPAdes</div>
+            <div class="metric-value">{{ resultado.l50_spades|default:"—" }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">N50 Velvet</div>
+            <div class="metric-value">{{ resultado.n50_velvet|default:"—" }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">L50 Velvet</div>
+            <div class="metric-value">{{ resultado.l50_velvet|default:"—" }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Duración total</div>
+            <div class="metric-value">{{ resultado.duracion_total|default:"—" }}s</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Ganador</div>
+            <div class="metric-value">
+                <span class="ganador-badge ganador-{{ resultado.ganador }}">{{ resultado.ganador|upper }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas de reportes -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('fastqc_r1_i', this)">FastQC Inicial R1</button>
+        <button class="tab-btn" onclick="showTab('fastqc_r2_i', this)">FastQC Inicial R2</button>
+        <button class="tab-btn" onclick="showTab('fastqc_r1_f', this)">FastQC Final R1</button>
+        <button class="tab-btn" onclick="showTab('fastqc_r2_f', this)">FastQC Final R2</button>
+        <button class="tab-btn" onclick="showTab('quast_spades', this)">QUAST SPAdes</button>
+        <button class="tab-btn" onclick="showTab('quast_velvet', this)">QUAST Velvet</button>
+    </div>
+
+    <div id="tab-fastqc_r1_i" class="tab-content active">
+        {% if resultado.reporte_fastqc_r1_inicial %}
+            <div style="text-align:center;padding:3rem"><a href="{{ resultado.reporte_fastqc_r1_inicial.url }}" target="_blank" class="btn-ver" style="font-size:1rem;padding:1rem 2rem;">🔬 Abrir reporte FastQC Inicial R1</a></div>
+        {% else %}<div class="no-reporte">Reporte no disponible</div>{% endif %}
+    </div>
+    <div id="tab-fastqc_r2_i" class="tab-content">
+        {% if resultado.reporte_fastqc_r2_inicial %}
+            <div style="text-align:center;padding:3rem"><a href="{{ resultado.reporte_fastqc_r2_inicial.url }}" target="_blank" class="btn-ver" style="font-size:1rem;padding:1rem 2rem;">🔬 Abrir reporte FastQC Inicial R2</a></div>
+        {% else %}<div class="no-reporte">Reporte no disponible</div>{% endif %}
+    </div>
+    <div id="tab-fastqc_r1_f" class="tab-content">
+        {% if resultado.reporte_fastqc_r1_final %}
+            <div style="text-align:center;padding:3rem"><a href="{{ resultado.reporte_fastqc_r1_final.url }}" target="_blank" class="btn-ver" style="font-size:1rem;padding:1rem 2rem;">🔬 Abrir reporte FastQC Final R1</a></div>
+        {% else %}<div class="no-reporte">Reporte no disponible</div>{% endif %}
+    </div>
+    <div id="tab-fastqc_r2_f" class="tab-content">
+        {% if resultado.reporte_fastqc_r2_final %}
+            <div style="text-align:center;padding:3rem"><a href="{{ resultado.reporte_fastqc_r2_final.url }}" target="_blank" class="btn-ver" style="font-size:1rem;padding:1rem 2rem;">🔬 Abrir reporte FastQC Final R2</a></div>
+        {% else %}<div class="no-reporte">Reporte no disponible</div>{% endif %}
+    </div>
+    <div id="tab-quast_spades" class="tab-content">
+        {% if resultado.reporte_quast_spades %}
+            <div style="text-align:center;padding:3rem"><a href="{{ resultado.reporte_quast_spades.url }}" target="_blank" class="btn-ver" style="font-size:1rem;padding:1rem 2rem;">📊 Abrir reporte QUAST SPAdes</a></div>
+        {% else %}<div class="no-reporte">Reporte no disponible</div>{% endif %}
+    </div>
+    <div id="tab-quast_velvet" class="tab-content">
+        {% if resultado.reporte_quast_velvet %}
+            <div style="text-align:center;padding:3rem"><a href="{{ resultado.reporte_quast_velvet.url }}" target="_blank" class="btn-ver" style="font-size:1rem;padding:1rem 2rem;">📊 Abrir reporte QUAST Velvet</a></div>
+        {% else %}<div class="no-reporte">Reporte no disponible</div>{% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "layout/indexview.html" %}
+{% block 'title' %}Historial de Resultados{% endblock %}
+{% block 'styles' %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+    body { background: radial-gradient(ellipse at top, #0d0020 0%, #000000 70%); min-height: 100vh; font-family: 'Rajdhani', sans-serif; }
+    body::before { content:""; position:fixed; top:0;left:0;width:100%;height:100%; background:url('https://www.transparenttextures.com/patterns/stardust.png'); opacity:0.2; pointer-events:none; z-index:0; animation:drift 80s linear infinite; }
+    @keyframes drift { from{background-position:0 0} to{background-position:5000px 5000px} }
+    .page-wrapper { position:relative; z-index:1; padding:3rem 1.5rem; max-width:1000px; margin:0 auto; }
+    .galaxy-title { font-family:'Orbitron',monospace; font-size:1.8rem; font-weight:700; background:linear-gradient(90deg,#00ffff,#8a2be2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.4rem; }
+    .galaxy-subtitle { color:rgba(200,180,255,0.6); font-size:0.95rem; margin-bottom:2rem; }
+    .section-title { font-family:'Orbitron',monospace; font-size:0.78rem; color:rgba(0,255,255,0.6); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(138,43,226,0.3); }
+    .result-card { background:rgba(15,5,35,0.85); border:1px solid rgba(138,43,226,0.35); border-radius:16px; padding:1.5rem; margin-bottom:1.2rem; transition:all 0.3s ease; animation:fadeIn 0.5s ease forwards; opacity:0; }
+    .result-card:hover { border-color:rgba(0,255,255,0.4); box-shadow:0 0 30px rgba(0,255,255,0.1); }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem; }
+    .card-historia { font-family:'Orbitron',monospace; font-size:1rem; color:#fff; }
+    .card-fecha { color:rgba(200,180,255,0.4); font-size:0.8rem; }
+    .card-meta { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:0.6rem; margin-bottom:1rem; }
+    .meta-item { background:rgba(0,0,0,0.3); border:1px solid rgba(138,43,226,0.2); border-radius:8px; padding:0.5rem 0.8rem; }
+    .meta-label { color:rgba(0,255,255,0.5); font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; }
+    .meta-value { color:#fff; font-size:0.95rem; font-weight:600; margin-top:0.1rem; }
+    .ganador-badge { display:inline-block; padding:0.2rem 0.8rem; border-radius:20px; font-size:0.75rem; font-family:'Orbitron',monospace; font-weight:700; }
+    .ganador-spades { background:rgba(0,255,255,0.15); border:1px solid rgba(0,255,255,0.4); color:#00ffff; }
+    .ganador-velvet { background:rgba(138,43,226,0.15); border:1px solid rgba(138,43,226,0.4); color:#b060ff; }
+    .btn-ver { display:inline-block; padding:0.5rem 1.2rem; background:linear-gradient(90deg,#00ffff,#8a2be2); border-radius:8px; color:#000; font-family:'Orbitron',monospace; font-size:0.7rem; font-weight:700; text-decoration:none; transition:all 0.3s ease; }
+    .btn-ver:hover { transform:scale(1.04); box-shadow:0 0 20px rgba(0,255,255,0.4); }
+    .empty-msg { text-align:center; color:rgba(200,180,255,0.4); font-size:1rem; padding:3rem 0; }
+</style>
+{% endblock %}
+{% block 'content' %}
+<div class="page-wrapper">
+    <h1 class="galaxy-title">Historial de Resultados</h1>
+    <p class="galaxy-subtitle">Todos los pipelines ejecutados en esta plataforma</p>
+
+    <div class="section-title">✦ Pipelines completados</div>
+
+    {% if resultados %}
+        {% for r in resultados %}
+        <div class="result-card" style="animation-delay:{{ forloop.counter0 }}00ms">
+            <div class="card-header">
+                <span class="card-historia">🧬 {{ r.nombre_historia }}</span>
+                <span class="card-fecha">{{ r.fecha|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="card-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Usuario</div>
+                    <div class="meta-value">{{ r.usuario }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Ganador</div>
+                    <div class="meta-value">
+                        <span class="ganador-badge ganador-{{ r.ganador }}">{{ r.ganador|upper }}</span>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">N50 SPAdes</div>
+                    <div class="meta-value">{{ r.n50_spades|default:"—" }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">L50 SPAdes</div>
+                    <div class="meta-value">{{ r.l50_spades|default:"—" }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">N50 Velvet</div>
+                    <div class="meta-value">{{ r.n50_velvet|default:"—" }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">L50 Velvet</div>
+                    <div class="meta-value">{{ r.l50_velvet|default:"—" }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Duración</div>
+                    <div class="meta-value">{{ r.duracion_total|default:"—" }}s</div>
+                </div>
+            </div>
+            <a href="{% url 'ver_reportes' r.id %}" target="_blank" class="btn-ver">✦ Ver Reportes</a>
+            <a href="https://usegalaxy.org/histories/view?id={{ r.history_id }}" target="_blank" class="btn-ver" style="margin-left:0.5rem; background:linear-gradient(90deg,#8a2be2,#00ffff);">Ver en Galaxy</a>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-msg">No hay pipelines registrados aún.</div>
+    {% endif %}
+</div>
+{% endblock %}
